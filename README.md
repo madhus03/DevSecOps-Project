@@ -97,6 +97,22 @@ Node Exporter: System Metrics Collection
 - Connect to the instance using SSH.
   * Click the netflix-jenkins instance > click on connect > choose EC2 instance connect > click Connect. Now we will be inside the server.
   * Update the packages ``` sudo apt update -y ```
+ 
+- Clonning the repo.
+  * Go to the git repo and clone the repo
+  * Now run ``` git clone <url of the repo> ```
+  * after clonning, you can do ls to see your project repo and do cd command to move into that folder. In my case. it's ``` cd DevSecOps-Project ```
+  * Inside the DevSecOps project, if you do ``` ls ``` , you will see the entire list of files of the project. 
+  * we have a Docker file in this project, So to create a Docker image we need to first install Docker on EC2.
+
+ - Installation of Docker 
+  * ``` sudo apt-get update # updating all the upackages
+        sudo apt-get install docker.io -y # Install Docker
+        sudo usermod -aG docker $USER  # Replace with your system's username, e.g., 'ubuntu' # Adding Ubuntu User to the Docker group for accessing Docker Daemon
+        newgrp docker
+        sudo chmod 777 /var/run/docker.sock # changing file permissions
+    ```
+  
 
   
 
