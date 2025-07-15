@@ -76,15 +76,15 @@ Node Exporter: System Metrics Collection
 #### Launch EC2 (Ubuntu 22.04):
 
 - Provision an EC2 instance on AWS with Ubuntu 22.04. (opted for t2.large instance - because to deal with the installation of lot of plugins, and tools)
-  Name : Netflix-jenkins
-  AMI: ubuntu 22.04
-  type: T2.large (not free tier)
-  Key pair: Used the existing Key pair
-  for the network settings: used the default vpc & subnet.
-  Security group: create a new security group with ports open for SSH, HTTPS, and HTTP.
-  (later ports will be added for app, Jenkins, sonar qube)
-  storage: 25 GiB
-  click on "launch Instance"
+  * Name : Netflix-jenkins
+  * AMI: ubuntu 22.04
+  * type: T2.large (not free tier)
+  * Key pair: Used the existing Key pair
+  * for the network settings: used the default vpc & subnet.
+  * Security group: create a new security group with ports open for SSH, HTTPS, and HTTP.
+   (later ports will be added for app, Jenkins, sonar qube)
+  * storage: 25 GiB
+  * click on "launch Instance"
 
 - Create an Elastic IP address
   Network & security > Elastic IPs > click on allocate Elastic IP
