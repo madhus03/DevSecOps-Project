@@ -10,7 +10,7 @@ We start with creating an EC2 instance and deploying the app locally using docke
 
 <img width="1608" height="1364" alt="image" src="https://github.com/user-attachments/assets/cfb70a61-1642-4029-8d13-28e6690427ee" />
 
-## utilities used : ##
+## Utilities used : ##
 
 Jenkins: Continuous Integration and Continuous Deployment (CI/CD)
 Docker: Containerization
@@ -87,16 +87,16 @@ Node Exporter: System Metrics Collection
   * click on "launch Instance"
 
 - Create an Elastic IP address
-  Network & security > Elastic IPs > click on allocate Elastic IP
+  * Network & security > Elastic IPs > click on allocate Elastic IP
   -- Elastic Ip settings --
-  Network Border group : us-east-1 (Mention the region of the instance)
-  Public IPv4 address Pool : Amazon's pool of IPV4 addresses
-  Click allocate
-  Name the Elastic IP address and save it > click on associate Elastic IP address > resource type: Instance > select the instance which you have created (netflix-    jenkins)>click associate. This will attach the Elastic IP to the netflix-Jenkins instance.
+  * Network Border group : us-east-1 (Mention the region of the instance)
+  * Public IPv4 address Pool : Amazon's pool of IPV4 addresses
+  * Click allocate
+  * Name the Elastic IP address and save it > click on associate Elastic IP address > resource type: Instance > select the instance which you have created (netflix-jenkins)     > click associate. This will attach the Elastic IP to the netflix-Jenkins instance.
 
 - Connect to the instance using SSH.
-  Click the netflix-jenkins instance > click on connect > choose EC2 instance connect > click Connect. Now we will be inside the server.
-  Update the packages ``` sudo apt update -y ```
+  * Click the netflix-jenkins instance > click on connect > choose EC2 instance connect > click Connect. Now we will be inside the server.
+  * Update the packages ``` sudo apt update -y ```
 
   
 
