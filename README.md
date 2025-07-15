@@ -108,9 +108,9 @@ Node Exporter: System Metrics Collection
  - Installation of Docker 
   * ``` sudo apt-get update # updating all the upackages
         sudo apt-get install docker.io -y //Install Docker
-        sudo usermod -aG docker $USER  # Replace with your system's username, e.g., 'ubuntu' # Adding Ubuntu User to the Docker group for accessing Docker Daemon
+        sudo usermod -aG docker $USER  //Replace with your system's username, e.g., 'ubuntu' # Adding Ubuntu User to the Docker group for accessing Docker Daemon
         newgrp docker
-        sudo chmod 777 /var/run/docker.sock # changing file permissions
+        sudo chmod 777 /var/run/docker.sock //changing file permissions
     ```
   
 
