@@ -127,11 +127,7 @@ Node Exporter: System Metrics Collection
   * Docker run:  ``` docker run -d -p 8081:80 <IMAGE ID OF THE NETFLIX> ```
   * This will spin a container.
   * Go to the browser and copy the paste the Public Ip address of the ec2 instance(netflix-jenkins) and port number to access the app. Make sure that you have added port   8081 onto your security group. Go to security group of the instance > inbound rules > edit inbound rules > add Custom TCP, port as '8081', source as 'Anywhere IPV4', and provide a description as 'app port'.
-  * Now if hit the browser, you should be able to see the app running- A complete blank page with Netflix name.
-
-    
-  * Let's add jenkins port number on security group : Go to security group of the instance > inbound rules > edit inbound rules > add Custom TCP, port as '8080', source as 'Anywhere IPV4', and provide a description as 'Jenkins port '.
-  * 
+  * Now if hit the browser, you should be able to see the app running- A complete blank page with Netflix name 
 
 
 #### **Creation of TMDB account and accessing API KEY**
@@ -185,7 +181,8 @@ Sonar qube: Soanrqube is a code quality assurance tool that collects and analyse
 #### Installing Trivy
  * Trivy : The most popular open source security scanner for scanning vulnerabilities, also to check Docker images and auto scan file systems.
  * To install :
-   ```
+   
+```
 sudo apt-get install wget apt-transport-https gnupg lsb-release
 wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
 echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
@@ -193,11 +190,63 @@ sudo apt-get update
 sudo apt-get install trivy  
 ```
  * This will install the trivy, and after installation you can verify this by running ``` trivy version ```
- * 
+
+#### Performing Trivy Scan 
+ * To perform trivy scanning on the project files - Go to your project repo > cd DevSecOps-Projects
+ * If you do ``` ls ``` , you can all the files within the project repo.
+ * run :
+```
+trivy fs .
+```
+ * This will scan the current file system and it gives you a report as well with severity of the vulnerability and some additional info
+ * To perform trivy on the docker images, do:
+```
+trivy <image id>
+```
+ * Once scanned, trivy will give a report which will say the vulnerabilities and its severity classes such as low, medium, high and critical.
 
 
-   
+### Phase 3: CI/CD setup (OPS PART)
 
+#### Installing Jenkins
+For the CI/CD, we will be using JENKINS as the orchestrator. 
+Pre-requisites: Jenkins requires Java for Installation. 
+
+ * Installating Java :
+```
+sudo apt update
+sudo apt install fontconfig openjdk-17-jre
+java -version
+openjdk version "17.0.8" 2023-07-18
+OpenJDK Runtime Environment (build 17.0.8+7-Debian-1deb12u1)
+OpenJDK 64-Bit Server VM (build 17.0.8+7-Debian-1deb12u1, mixed mode, sharing)
+```
+ * Installing Jenkins :
+```
+#jenkins
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+/etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt-get update
+sudo apt-get install jenkins
+sudo systemctl start jenkins
+sudo systemctl enable jenkins 
+```
+ * To verify the Installation, run ``` Sudo service Jenkins status ```. If the status is running then the Jenkins installation is successful.
+ * Add Jenkins to the Docker group for daemon access : ``` sudo usermod aG docker Jenkins ``` 
+ * Let's add jenkins port number on security group : Go to security group of the instance > inbound rules > edit inbound rules > add Custom TCP, port as '8080', source as 'Anywhere IPV4', and provide a description as 'Jenkins port '.
+
+#### Accessing Jenkins   
+ * Once the installation is done, you can access the Jenkins on the browser as <publicIP address of the instance>:8080
+ * You will be prompted with 'getting started page' on Jenkins, and asks you to enter 'administrator password'
+<img width="2272" height="1242" alt="image" src="https://github.com/user-attachments/assets/3d035aed-6004-4ce1-9fb9-25a3059c52c0" />
+ * the password is always stored in this path : /var/lib/jenkins/secrets/initialAdminPassword
+ * Go back to your terminal and enter ``` sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+ * This give you the password as the o/p. copy the password and paste it on the browser > administrator password
+ * Next, it will prompt you for installing Plugins, Go with 'Install suggested plugins'
+ * Jenkins will install the suggested plugins (this may take some time)
 
 
    
