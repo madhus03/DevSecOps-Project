@@ -4,6 +4,25 @@ Deployed a Netflix CLone application as a Docker Container on Kubernetes Cluster
 
 ## Project Architecture ##
 
+Docker file: 
+FROM node:16.17.0-alpine as builder #  Uses a lightweight Alpine-based Node.js image to build the frontend.  
+WORKDIR /app # set the working directory inside the container 
+COPY ./package.json . # Copy the package.json from the local machine to container needed for dependency installation
+COPY ./yarn.lock .    # copy the yarn.lock from local machine to container needed for dependency installation.
+RUN yarn install      # Installs project dependencies using yarn
+COPY . .              # Copies the rest of your app code (source files, components, etc.) into the container's /app directory.
+ARG TMDB_V3_API_KEY   # declaring a build time variable. Pass the TMDB API KEY during Docker build 
+ENV VITE_APP_TMDB_V3_API_KEY=${TMDB_V3_API_KEY} # Converts the build-time ARG into a runtime environment variable that Vite can use when building the frontend.
+ENV VITE_APP_API_ENDPOINT_URL="https://api.themoviedb.org/3" # Sets a public environment variable your app can read — likely used by the frontend to make API calls to TMDB.
+RUN yarn build  # Builds the optimized static files (like index.html, JS, CSS) for production. 
+
+FROM nginx:stable-alpine # Uses a lightweight Alpine-based nginx image to build the frontend.  
+WORKDIR /usr/share/nginx/html # Changes working directory to where Nginx serves static files by default.
+RUN rm -rf ./* #  Clears any default files (like the default Nginx welcome page).
+COPY --from=builder /app/dist . # Copies the built app (from the dist folder in the first stage) into Nginx's serving directory.
+EXPOSE 80 # tells Docker that this container will serve traffic on port 80 (default HTTP port).
+ENTRYPOINT ["nginx", "-g", "daemon off;"] # start Nginx in the foreground to serve the app
+
 Outline: 
 
 We start with creating an EC2 instance and deploying the app locally using docker container. Once the application is up and running locally, we will integrate security using sonarqube and trivy. Then we will automate this entire process manually using a CI/CD tool Jenkins, which will automate the creation of secured Docker Image and will be uploaded on the Docker hub. Now, Prometheus and Grafana will be added for monitoring, which will monitor the ec2 instance as well as in Jenkins to check the successfull jobs, failed jobs, etc and along with this we have email notification to get the up to date successful and failed jobs in Jenkins using SMTP. Finally we will deploy this app on Kubernetes using Argo CD (the GitOps tool) & we will have monitoring on our Kubernetes cluster which is going to be installed through helm charts. 
@@ -75,7 +94,7 @@ Node Exporter: System Metrics Collection
 
 #### Launch EC2 (Ubuntu 22.04):
 
-- Provision an EC2 instance on AWS with Ubuntu 22.04. (opted for t2.large instance - because to deal with the installation of lot of plugins, and tools)
+- **Provision an EC2 instance on AWS with Ubuntu 22.04.** (opted for t2.large instance - because to deal with the installation of lot of plugins, and tools)
   * Name : Netflix-jenkins
   * AMI: ubuntu 22.04
   * type: T2.large (not free tier)
@@ -86,7 +105,7 @@ Node Exporter: System Metrics Collection
   * storage: 25 GiB
   * click on "launch Instance"
 
-- Create an Elastic IP address
+- **Create an Elastic IP address**
   * Network & security > Elastic IPs > click on allocate Elastic IP
   -- Elastic Ip settings --
   * Network Border group : us-east-1 (Mention the region of the instance)
@@ -94,25 +113,30 @@ Node Exporter: System Metrics Collection
   * Click allocate
   * Name the Elastic IP address and save it > click on associate Elastic IP address > resource type: Instance > select the instance which you have created (netflix-jenkins)     > click associate. This will attach the Elastic IP to the netflix-Jenkins instance.
 
-- Connect to the instance using SSH.
+- **Connect to the instance using SSH**
   * Click the netflix-jenkins instance > click on connect > choose EC2 instance connect > click Connect. Now we will be inside the server.
   * Update the packages ``` sudo apt update -y ```
  
-- Clonning the repo.
+- **Clonning the repo**
   * Go to the git repo and clone the repo
   * Now run ``` git clone <url of the repo> ```
   * after clonning, you can do ls to see your project repo and do cd command to move into that folder. In my case. it's ``` cd DevSecOps-Project ```
   * Inside the DevSecOps project, if you do ``` ls ``` , you will see the entire list of files of the project. 
   * we have a Docker file in this project, So to create a Docker image we need to first install Docker on EC2.
 
- - Installation of Docker 
+ - **Installation of Docker**
   * ``` sudo apt-get update # updating all the upackages
-        sudo apt-get install docker.io -y //Install Docker
-        sudo usermod -aG docker $USER  //Replace with your system's username, e.g., 'ubuntu' # Adding Ubuntu User to the Docker group for accessing Docker Daemon
+        sudo apt-get install docker.io -y   # Install Docker
+        sudo usermod -aG docker $USER       # Replace with your system's username, e.g., 'ubuntu' # Adding Ubuntu User to the Docker group for accessing Docker Daemon
         newgrp docker
-        sudo chmod 777 /var/run/docker.sock //changing file permissions
+        sudo chmod 777 /var/run/docker.sock # changing file permissions
     ```
-  
+  * verify the Docker ``` docker version ```
+ 
+ - Build and run the app locally
+  * Docker build command : ``` docker build -t netflix . ```
+  * 
+
 
   
 
