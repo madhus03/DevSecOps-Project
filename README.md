@@ -241,8 +241,8 @@ sudo systemctl enable jenkins
 #### Accessing Jenkins   
  * Once the installation is done, you can access the Jenkins on the browser as <publicIP address of the instance>:8080
  * You will be prompted with 'getting started page' on Jenkins, and asks you to enter 'administrator password'
-<img width="2272" height="1242" alt="image" src="https://github.com/user-attachments/assets/3d035aed-6004-4ce1-9fb9-25a3059c52c0" />
- * the password is always stored in this path : /var/lib/jenkins/secrets/initialAdminPassword
+   <img width="2272" height="1242" alt="image" src="https://github.com/user-attachments/assets/3d035aed-6004-4ce1-9fb9-25a3059c52c0" />
+ * The password is always stored in this path : /var/lib/jenkins/secrets/initialAdminPassword
  * Go back to your terminal and enter ``` sudo cat /var/lib/jenkins/secrets/initialAdminPassword ``` 
  * This give you the password as the o/p. copy the password and paste it on the browser > administrator password
  * Next, it will prompt you for installing Plugins, Go with 'Install suggested plugins'
