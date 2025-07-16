@@ -4,25 +4,6 @@ Deployed a Netflix CLone application as a Docker Container on Kubernetes Cluster
 
 ## Project Architecture ##
 
-Docker file: 
-FROM node:16.17.0-alpine as builder #  Uses a lightweight Alpine-based Node.js image to build the frontend.  
-WORKDIR /app # set the working directory inside the container 
-COPY ./package.json . # Copy the package.json from the local machine to container needed for dependency installation
-COPY ./yarn.lock .    # copy the yarn.lock from local machine to container needed for dependency installation.
-RUN yarn install      # Installs project dependencies using yarn
-COPY . .              # Copies the rest of your app code (source files, components, etc.) into the container's /app directory.
-ARG TMDB_V3_API_KEY   # declaring a build time variable. Pass the TMDB API KEY during Docker build 
-ENV VITE_APP_TMDB_V3_API_KEY=${TMDB_V3_API_KEY} # Converts the build-time ARG into a runtime environment variable that Vite can use when building the frontend.
-ENV VITE_APP_API_ENDPOINT_URL="https://api.themoviedb.org/3" # Sets a public environment variable your app can read — likely used by the frontend to make API calls to TMDB.
-RUN yarn build  # Builds the optimized static files (like index.html, JS, CSS) for production. 
-
-FROM nginx:stable-alpine # Uses a lightweight Alpine-based nginx image to build the frontend.  
-WORKDIR /usr/share/nginx/html # Changes working directory to where Nginx serves static files by default.
-RUN rm -rf ./* #  Clears any default files (like the default Nginx welcome page).
-COPY --from=builder /app/dist . # Copies the built app (from the dist folder in the first stage) into Nginx's serving directory.
-EXPOSE 80 # tells Docker that this container will serve traffic on port 80 (default HTTP port).
-ENTRYPOINT ["nginx", "-g", "daemon off;"] # start Nginx in the foreground to serve the app
-
 Outline: 
 
 We start with creating an EC2 instance and deploying the app locally using docker container. Once the application is up and running locally, we will integrate security using sonarqube and trivy. Then we will automate this entire process manually using a CI/CD tool Jenkins, which will automate the creation of secured Docker Image and will be uploaded on the Docker hub. Now, Prometheus and Grafana will be added for monitoring, which will monitor the ec2 instance as well as in Jenkins to check the successfull jobs, failed jobs, etc and along with this we have email notification to get the up to date successful and failed jobs in Jenkins using SMTP. Finally we will deploy this app on Kubernetes using Argo CD (the GitOps tool) & we will have monitoring on our Kubernetes cluster which is going to be installed through helm charts. 
@@ -92,9 +73,7 @@ Node Exporter: System Metrics Collection
 
 ### Phase 1: Initial Setup and Deployment (DEV PART)
 
-#### Launch EC2 (Ubuntu 22.04):
-
-- **Provision an EC2 instance on AWS with Ubuntu 22.04.** (opted for t2.large instance - because to deal with the installation of lot of plugins, and tools)
+#### **Provision an EC2 instance on AWS with Ubuntu 22.04.** (opted for t2.large instance - because to deal with the installation of lot of plugins, and tools)
   * Name : Netflix-jenkins
   * AMI: ubuntu 22.04
   * type: T2.large (not free tier)
@@ -104,8 +83,13 @@ Node Exporter: System Metrics Collection
    (later ports will be added for app, Jenkins, sonar qube)
   * storage: 25 GiB
   * click on "launch Instance"
+    
+   <img width="2368" height="1159" alt="image" src="https://github.com/user-attachments/assets/77ab07f5-a06c-4c4b-a2b8-d8c731622268" />
+   <img width="2316" height="1145" alt="image" src="https://github.com/user-attachments/assets/cf260e50-66e0-4e3a-8272-284f7fee27e9" />
+   <img width="2267" height="1095" alt="image" src="https://github.com/user-attachments/assets/2b7cb960-b7b3-49ce-8479-487b03879bf3" />
 
-- **Create an Elastic IP address**
+
+#### **Create an Elastic IP address**
   * Network & security > Elastic IPs > click on allocate Elastic IP
   -- Elastic Ip settings --
   * Network Border group : us-east-1 (Mention the region of the instance)
@@ -113,18 +97,20 @@ Node Exporter: System Metrics Collection
   * Click allocate
   * Name the Elastic IP address and save it > click on associate Elastic IP address > resource type: Instance > select the instance which you have created (netflix-jenkins)     > click associate. This will attach the Elastic IP to the netflix-Jenkins instance.
 
-- **Connect to the instance using SSH**
+  <img width="2221" height="1097" alt="image" src="https://github.com/user-attachments/assets/e271daf7-f13a-40c7-a3ae-a93cb6c86695" />
+
+#### **Connect to the instance using SSH**
   * Click the netflix-jenkins instance > click on connect > choose EC2 instance connect > click Connect. Now we will be inside the server.
   * Update the packages ``` sudo apt update -y ```
  
-- **Clonning the repo**
+#### **Clonning the repo**
   * Go to the git repo and clone the repo
   * Now run ``` git clone <url of the repo> ```
   * after clonning, you can do ls to see your project repo and do cd command to move into that folder. In my case. it's ``` cd DevSecOps-Project ```
   * Inside the DevSecOps project, if you do ``` ls ``` , you will see the entire list of files of the project. 
   * we have a Docker file in this project, So to create a Docker image we need to first install Docker on EC2.
 
- - **Installation of Docker**
+#### **Installation of Docker**
   * ``` sudo apt-get update # updating all the upackages
         sudo apt-get install docker.io -y   # Install Docker
         sudo usermod -aG docker $USER       # Replace with your system's username, e.g., 'ubuntu' # Adding Ubuntu User to the Docker group for accessing Docker Daemon
@@ -133,9 +119,88 @@ Node Exporter: System Metrics Collection
     ```
   * verify the Docker ``` docker version ```
  
- - Build and run the app locally
+#### **Build and run the app locally**
   * Docker build command : ``` docker build -t netflix . ```
+  * Once the image has been built, verify it ``` docker images ```
+  * you should be able to see the REPOSITORY name as 'netflix', along with TAG, IMAGE ID, CREATED TIME, and SIZE. 
+  * In our Docker file we are having an arguemnt - ARG TMDB_V3_API_KEY, the api key has to be passed during the docker build command. (since I'm locally testing it, I    haven't given any api key so far, so upon accessing the application I am expecting a blank page for now)
+  * Docker run:  ``` docker run -d -p 8081:80 <IMAGE ID OF THE NETFLIX> ```
+  * This will spin a container.
+  * Go to the browser and copy the paste the Public Ip address of the ec2 instance(netflix-jenkins) and port number to access the app. Make sure that you have added port   8081 onto your security group. Go to security group of the instance > inbound rules > edit inbound rules > add Custom TCP, port as '8081', source as 'Anywhere IPV4', and provide a description as 'app port'.
+  * Now if hit the browser, you should be able to see the app running- A complete blank page with Netflix name.
+
+    
+  * Let's add jenkins port number on security group : Go to security group of the instance > inbound rules > edit inbound rules > add Custom TCP, port as '8080', source as 'Anywhere IPV4', and provide a description as 'Jenkins port '.
   * 
+
+
+#### **Creation of TMDB account and accessing API KEY**
+ * The application which we are creating has list of series, movies, documentaries, etc on netflix and we want to have an api that fetches these movies/series/documentaries from TMDB and put it on our application. 
+ * TMDB - The Movie Database : this is the place where we can get the APi to fetch all the movies and series from here into our app. 
+ * TMDB LINK: https://www.themoviedb.org/
+ * create an account with TMDB : open TMDB > click 'signup' > fill the details. 
+<img width="2498" height="1262" alt="image" src="https://github.com/user-attachments/assets/e1efca47-5cec-45fc-b24f-4c26577cd5b7" />
+ * Go to settings option > API > click on API key and generate it and copy the API key.
+
+#### **using the API key in our Docker build and testing the application**
+ * first, Let's Stop all the running containers.
+ * To verify that : ``` docker ps ``` , this should show the list of the containers that are running.
+ * To stop the container :
+    ``` docker stop <image id> ```
+    ``` docker rm <image id> ```
+ * once again you can do ``` docker ps ``` to verify if there are any running containers.
+ * recreate the docker image with api key :
+   ```
+   docker build --build-arg TMDB_V3_API_KEY=<your-api-key> -t netflix .
+   ```
+ * Paste the api key on the build command
+ * This will create a new docker image now. This time it wont take much time for creation because Docker images are built on layers and they will create only the layer which has been newly added.
+ * Do ``` docker images ``` to check whether the new docker image is created or not.
+ * Docker run : ``` docker run -d -p 8081:80 netflix ```
+ * This will give a sha output (meaning - A container is up and running )
+ * Go to the browser and copy the paste the Public Ip address of the ec2 instance(netflix-jenkins) and port number to access the app. you shpuld be able to see all the content being getting displayed on the application.
+<img width="2269" height="1239" alt="image" src="https://github.com/user-attachments/assets/6b27db36-2b1d-46ae-b1c2-c4684c1f79c8" />
+<img width="2279" height="1241" alt="image" src="https://github.com/user-attachments/assets/95af5d39-3320-4180-a8fb-bd824d0b954b" />
+Our application is running properly on the local machine . Let's go ahead and integrate security part.
+
+### Phase 2: Security Scanning (SEC PART)
+
+#### Installing Sonarqube 
+Sonar qube: Soanrqube is a code quality assurance tool that collects and analyses source code, and provides reports for the code quality of your project. 
+ * We are gonna run the Sonarqube as a Docker container
+ * ''' docker run -d --name sonar -p 9000:9000 sonarqube:lts-community ```
+ * This will fetch sonarqube image from Docker hub.
+ * verify using ''' docker ps ```
+ * this should bring up two containers, one is for sonarqube running on port 9000 and another one is for our application running on port 8081.
+ * Let's add Sonar qube port number on security group : Go to security group of the instance > inbound rules > edit inbound rules > add Custom TCP, port as '9000', source as 'Anywhere IPV4', and provide a description as 'sonarqube port ', click save.
+ 
+#### Accessing and logging into Sonarqube
+ * on the browser, copy the public IP address of the ec2 instance and the port number of the sonarqube, hit enter.
+ * You will see the Sonarqbe page. It takes some time to load the page.
+ * It prompts you for username and password. For the first time both username and password is admin.
+ * Once you login, it will prompt you to change the password. Provide a new password and update it.
+<img width="2263" height="1241" alt="image" src="https://github.com/user-attachments/assets/ea871da4-0020-4a67-a4e5-696683c35c1a" />
+
+
+#### Installing Trivy
+ * Trivy : The most popular open source security scanner for scanning vulnerabilities, also to check Docker images and auto scan file systems.
+ * To install :
+   ```
+sudo apt-get install wget apt-transport-https gnupg lsb-release
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+sudo apt-get update
+sudo apt-get install trivy  
+```
+ * This will install the trivy, and after installation you can verify this by running ``` trivy version ```
+ * 
+
+
+   
+
+
+
+   
 
 
   
