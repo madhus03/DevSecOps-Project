@@ -247,6 +247,8 @@ sudo systemctl enable jenkins
  * This give you the password as the o/p. copy the password and paste it on the browser > administrator password
  * Next, it will prompt you for installing Plugins, Go with 'Install suggested plugins'
  * Jenkins will install the suggested plugins (this may take some time)
+
+Jenkins needs to have all the necessary plugins for the application (which is on the base image node 16), so you'll need Node js plugin, Java, and sonarqube plugin for the CI/CD pipeline. 
    
 
 
